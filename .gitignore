@@ -1,0 +1,19 @@
+# Build outputs
+bin/
+obj/
+src/**/bin/
+src/**/obj/
+
+# Local tooling and editor state
+.vs/
+.vscode/
+.idea/
+.claude/settings.local.json
+
+# Game binaries and generated reference output
+refs/*.dll
+decompiled/
+
+# OS noise
+Thumbs.db
+Desktop.ini
