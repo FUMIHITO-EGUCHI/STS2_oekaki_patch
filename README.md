@@ -31,6 +31,22 @@ dotnet build src/EraserMod -c Release
 dotnet build src/Injector -c Release
 ```
 
+## Git 運用
+
+Issue 起点の feature branch 運用を前提にしています。
+
+```powershell
+# 初回のみ Git hook をインストール
+& "C:\Program Files\Git\bin\sh.exe" scripts/setup-hooks.sh
+
+# Issue #12 の作業ブランチを作成
+& "C:\Program Files\Git\bin\sh.exe" scripts/start-issue.sh fix 12 eraser-width
+```
+
+- branch 名は `feature|fix|refactor|docs|chore/<issue番号>-<topic>`、雑務のみ `chore/skip-<topic>`。
+- commit message には `#<issue番号>`、雑務のみ `[skip-issue]` を含める。
+- pre-commit hook は `dotnet build src/EraserMod -c Release` と `dotnet build src/Injector -c Release` を実行します。
+
 ## インストール / アンインストール
 
 ```powershell
