@@ -1,0 +1,36 @@
+#!/bin/sh
+# commit-msg hook
+# commit message に `#<issue>` または `[skip-issue]` が含まれるか検査する。
+# install with: sh scripts/setup-hooks.sh
+
+MSG_FILE="$1"
+
+if [ ! -f "$MSG_FILE" ]; then
+  echo "[commit-msg] file not found: $MSG_FILE"
+  exit 2
+fi
+
+BODY="$(sed '/^#/d' "$MSG_FILE")"
+FIRST_LINE="$(printf "%s\n" "$BODY" | sed -n '1p')"
+
+case "$FIRST_LINE" in
+  Merge\ *|Revert\ \"*|fixup!\ *|squash!\ *|amend!\ *)
+    exit 0
+    ;;
+esac
+
+printf "%s\n" "$BODY" | grep -Eq '(^|[[:space:](\[{])#[0-9]+([^0-9]|$)|\[skip-issue\]'
+if [ $? -eq 0 ]; then
+  exit 0
+fi
+
+echo ""
+echo "[commit-msg] commit message must reference a GitHub Issue."
+echo ""
+echo "  Include #<issue-number> somewhere in the commit message, e.g.:"
+echo "    fix: adjust eraser width clamp (#42)"
+echo ""
+echo "  For trivial changes you may use:"
+echo "    chore: update docs [skip-issue]"
+echo ""
+exit 1

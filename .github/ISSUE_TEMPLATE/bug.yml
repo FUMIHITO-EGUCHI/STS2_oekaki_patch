@@ -1,0 +1,59 @@
+name: Bug
+description: 既存機能の不具合報告
+title: "[bug] "
+labels: ["status: todo", "type: bug"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: 何が起きているか（1〜3 行）
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Repro steps
+      description: 再現手順。可能なら最小再現ケースを書く
+      placeholder: |
+        1. `install.ps1` を実行
+        2. STS2 v0.104.0 を起動
+        3. マップ画面で `]` を押す
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: STS2 バージョン、Steam / OS、.NET SDK、導入先パス等
+      placeholder: |
+        - STS2: v0.104.0 (commit dc286199)
+        - OS: Windows 11
+        - .NET SDK: 8.x / 9.x
+    validations:
+      required: false
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes / Logs / Screenshots
+      description: `%LOCALAPPDATA%\MegaCrit\SlayTheSpire2\EraserMod\log.txt` の関連行など
+    validations:
+      required: false
+
