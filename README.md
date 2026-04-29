@@ -1,88 +1,93 @@
 # STS2_oekaki_patch
 
-マップに描いた線を消す消しゴムの太さ、鉛筆の太さ・色、Undo を調整できるようにする MOD。
+Slay the Spire 2 のマップ描画を拡張する Windows 向け MOD。
 
 ゲームバージョン v0.104.0 (commit dc286199, 2026-04-23) で動作確認。
 
-## 仕組み
+## MOD の概要
 
-- ゲーム本体は Godot 4 + .NET (C#)。`0Harmony.dll` と `MonoMod` が同梱されているので、Harmony で実行時パッチを当てる方式。
-- `EraserMod.dll`(Harmony パッチ) を `data_sts2_windows_x86_64/` に配置し、`sts2.dll` の `<Module>.cctor` に `Assembly.LoadFrom("EraserMod.dll").EraserMod.Bootstrap.Init()` を呼ぶ IL を 1 行差し込む。
-- パッチ対象は主に `NMapDrawings.BeginLineLocal` / `CreateLineForPlayer(Player, bool isErasing)` で、ローカル描画だけを拡張する。
-- マルチプレイ同期は未実装。色・太さ・Undo は現時点ではローカル表示のみ。
+- マップ画面の消しゴム幅を変更できます。
+- 鉛筆の太さと色を変更できます。
+- ローカル描画を 1 つ戻す Undo を追加します。
+- マップ画面に小さなツールバーを表示します。
+- 鉛筆/消しゴムの現在範囲をカーソル位置に円で表示します。
 
-## ホットキー（マップ画面で有効）
+現時点ではローカル表示のみ対応です。マルチプレイ相手への太さ、色、Undo の同期は未実装です。
 
-| Key | 効果 |
-|-----|------|
-| `[` | 消しゴム幅を縮小 |
-| `]` | 消しゴム幅を拡大 |
-| `\` | 倍率を 1.0x にリセット |
-| `Shift + [` | 鉛筆幅を縮小 |
-| `Shift + ]` | 鉛筆幅を拡大 |
-| `Shift + \` | 鉛筆幅を 1.0x にリセット |
-| `Ctrl + Z` | ローカル描画を 1 つ Undo |
+## 基本操作
+
+ツールバーはマップ画面で自動表示されます。ドラッグで好きな位置へ移動できます。
+
+| 操作 | 効果 |
+|---|---|
+| ツールバーの Eraser スライダー | 消しゴム幅を変更 |
+| ツールバーの Pencil スライダー | 鉛筆幅を変更 |
+| 色ボタン | 鉛筆色を変更 |
+| `D` 色ボタン | ゲーム標準色へ戻す |
+| `Undo` ボタン | ローカル描画を 1 つ戻す |
 | `Ctrl + Shift + E` | ツールバー表示切替 |
 | `Ctrl + Shift + L` | MOD ログ表示切替 |
 
-倍率は `0.5x` ステップで `0.5 ~ 12.0x` の範囲。消しゴムのデフォルトは **3.0x**、鉛筆のデフォルトは **1.0x**。
+マップ画面では次のショートカットも使えます。
+
+| キー | 効果 |
+|---|---|
+| `[` | 消しゴム幅を縮小 |
+| `]` | 消しゴム幅を拡大 |
+| `\` | 消しゴム幅を 1.0x に戻す |
+| `Shift + [` | 鉛筆幅を縮小 |
+| `Shift + ]` | 鉛筆幅を拡大 |
+| `Shift + \` | 鉛筆幅を 1.0x に戻す |
+| `Ctrl + Z` | ローカル描画を 1 つ戻す |
+
+倍率は `0.5x` ステップで `0.5x` から `12.0x` まで変更できます。消しゴムのデフォルトは `3.0x`、鉛筆のデフォルトは `1.0x` です。
 
 設定ファイル: `%LOCALAPPDATA%\MegaCrit\SlayTheSpire2\EraserMod\config.json`
-ログ: 同フォルダの `log.txt`
 
-`config.txt` が残っている場合は初回起動時に `config.json` へ移行する。
+ログ: `%LOCALAPPDATA%\MegaCrit\SlayTheSpire2\EraserMod\log.txt`
 
-## ビルド
+## インストール方法
 
-```powershell
-# 必要: .NET 8 SDK + .NET 9 SDK
-dotnet build src/EraserMod -c Release
-dotnet build src/Injector -c Release
-```
-
-## Git 運用
-
-Issue 起点の feature branch 運用を前提にしています。
+1. GitHub Releases から `STS2_oekaki_patch-v0.0.1.zip` をダウンロードします。
+2. zip を任意のフォルダへ展開します。
+3. Slay the Spire 2 を終了します。
+4. PowerShell で展開先フォルダを開きます。
+5. 次のコマンドを実行します。
 
 ```powershell
-# 初回のみ Git hook をインストール
-& "C:\Program Files\Git\bin\sh.exe" scripts/setup-hooks.sh
-
-# Issue #12 の作業ブランチを作成
-& "C:\Program Files\Git\bin\sh.exe" scripts/start-issue.sh fix 12 eraser-width
+powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
-- branch 名は `feature|fix|refactor|docs|chore/<issue番号>-<topic>`、雑務のみ `chore/skip-<topic>`。
-- commit message には `#<issue番号>`、雑務のみ `[skip-issue]` を含める。
-- pre-commit hook は `dotnet build src/EraserMod -c Release` と `dotnet build src/Injector -c Release` を実行します。
-
-## インストール / アンインストール
+Steam 以外の場所にインストールしている場合は、ゲームフォルダを指定します。
 
 ```powershell
-.\install.ps1                # 既定の Steam パスを想定
-.\install.ps1 -GameDir "..."
-
-.\uninstall.ps1              # sts2.dll.orig から復元
+powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1 -GameDir "C:\path\to\Slay the Spire 2"
 ```
 
-注意: Steam の整合性チェックでパッチが上書きされる場合があります。ゲームをアップデートした場合は再インストール、もしくは `sts2.dll` のクラス名が変わっていたら `decompiled/` を再生成して再ビルドが必要。
+`install.ps1` は `sts2.dll.orig` をバックアップとして作成し、`sts2.dll` に MOD 読み込み処理を注入します。バックアップがある場合はそれを元に再注入するため、同じフォルダで再実行できます。
 
-## ファイル構成
+## アンインストール方法
 
+Slay the Spire 2 を終了してから、PowerShell で次を実行します。
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\uninstall.ps1
 ```
-STS2_oekaki_patch/
-├── src/
-│   ├── EraserMod/         Harmony パッチ DLL
-│   │   ├── Bootstrap.cs       Init/ログ
-│   │   ├── Config.cs          JSON 設定の永続化
-│   │   ├── HotkeyHandler.cs   hotkey 処理
-│   │   ├── Toolbar.cs         ツールバー UI
-│   │   ├── CursorPreview.cs   消しゴムプレビュー
-│   │   ├── UndoStack.cs       ローカル Undo
-│   │   └── Patches.cs         Harmony パッチ定義
-│   └── Injector/          sts2.dll への IL 注入
-├── refs/                  ビルド時参照する DLL コピー
-├── decompiled/            ILSpy で展開した解析用ソース（参考）
-├── install.ps1
-└── uninstall.ps1
+
+Steam 以外の場所にインストールしている場合:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\uninstall.ps1 -GameDir "C:\path\to\Slay the Spire 2"
 ```
+
+`uninstall.ps1` は `sts2.dll.orig` から `sts2.dll` を復元します。
+
+## 注意
+
+- ゲーム更新、Steam の整合性チェック、再インストールでパッチが上書きされる場合があります。その場合は MOD を再インストールしてください。
+- ゲーム本体の内部実装が変わると、この MOD は動作しなくなる可能性があります。
+- `sts2.dll` や `refs/*.dll` など、ゲーム本体由来の DLL は配布物に含めていません。
+
+## 免責
+
+この MOD は非公式です。導入、利用、アンインストール、ゲーム更新後の再導入によって発生した不具合、データ損失、ゲームの起動不能、その他あらゆる損害について、作者は責任を負いません。自己責任で使用してください。
