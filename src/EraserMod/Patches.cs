@@ -1,7 +1,7 @@
 using System;
-using System.Reflection;
 using Godot;
 using HarmonyLib;
+using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.Nodes.Screens.Map;
 
 namespace EraserMod;
@@ -26,41 +26,13 @@ public static class NMapDrawings_BeginLineLocal_Patch
     internal static void ApplyEraserWidth(NMapDrawings inst)
     {
         // Reach into private _drawingStates list and find the local player's state.
-        var statesField = typeof(NMapDrawings).GetField("_drawingStates",
-            BindingFlags.NonPublic | BindingFlags.Instance);
-        var netSvcField = typeof(NMapDrawings).GetField("_netService",
-            BindingFlags.NonPublic | BindingFlags.Instance);
-        if (statesField == null || netSvcField == null) { Bootstrap.Log("missing fields"); return; }
+        var state = MapReflection.GetLocalState(inst);
+        var line = MapReflection.GetCurrentLine(state);
+        if (line == null || MapReflection.GetCurrentMode(state) != DrawingMode.Erasing) return;
 
-        var netSvc = netSvcField.GetValue(inst);
-        if (netSvc == null) { Bootstrap.Log("netSvc null"); return; }
-
-        var netIdProp = netSvc.GetType().GetProperty("NetId")
-                        ?? netSvc.GetType().GetInterfaces()[0].GetProperty("NetId");
-        ulong localNetId = (ulong)netIdProp.GetValue(netSvc);
-
-        var states = (System.Collections.IEnumerable)statesField.GetValue(inst);
-        foreach (var state in states)
-        {
-            var pidField = state.GetType().GetField("playerId");
-            if (pidField == null) continue;
-            ulong pid = (ulong)pidField.GetValue(state);
-            if (pid != localNetId) continue;
-
-            var modeField = state.GetType().GetField("drawingMode");
-            var lineField = state.GetType().GetField("currentlyDrawingLine");
-            var mode = modeField?.GetValue(state);
-            var line = lineField?.GetValue(state) as Line2D;
-            bool isErasing = mode != null && mode.ToString() == "Erasing";
-            Bootstrap.Log($"local state: mode={mode} line={(line == null ? "null" : line.Width.ToString("F1"))}");
-            if (line == null || !isErasing) return;
-
-            float before = line.Width;
-            line.Width = before * Config.WidthMultiplier;
-            Bootstrap.Log($"Eraser line: {before:F1} -> {line.Width:F1} (x{Config.WidthMultiplier:F2})");
-            return;
-        }
-        Bootstrap.Log("no local drawing state found");
+        float before = line.Width;
+        line.Width = before * Config.EraserMultiplier;
+        Bootstrap.Log($"Eraser line: {before:F1} -> {line.Width:F1} (x{Config.EraserMultiplier:F2})");
     }
 }
 
@@ -73,7 +45,29 @@ public static class NMapDrawings_BeginLine_Patch
 [HarmonyPatch(typeof(NMapDrawings), "CreateLineForPlayer")]
 public static class NMapDrawings_CreateLineForPlayer_Patch
 {
-    static void Postfix(bool isErasing) => Bootstrap.Log($"CreateLineForPlayer fired isErasing={isErasing}");
+    static void Postfix(NMapDrawings __instance, Line2D __result, Player player, bool isErasing)
+    {
+        Bootstrap.Log($"CreateLineForPlayer fired isErasing={isErasing}");
+        if (__result == null || player == null) return;
+        if (player.NetId != MapReflection.GetLocalNetId(__instance)) return;
+
+        if (isErasing)
+        {
+            var eraseColor = new Color(1f, 1f, 1f, __result.DefaultColor.A);
+            __result.DefaultColor = eraseColor;
+            Bootstrap.Log($"Eraser color forced to white alpha={eraseColor.A:F2}");
+            return;
+        }
+
+        float before = __result.Width;
+        __result.Width = before * Config.PencilMultiplier;
+        if (ColorUtil.TryParseHex(Config.PencilColorHex, out var color))
+        {
+            color.A = __result.DefaultColor.A;
+            __result.DefaultColor = color;
+        }
+        Bootstrap.Log($"Pencil line: {before:F1} -> {__result.Width:F1} (x{Config.PencilMultiplier:F2})");
+    }
 }
 
 [HarmonyPatch(typeof(NMapDrawings), "_Ready")]
@@ -84,5 +78,16 @@ public static class NMapDrawings_Ready_Patch
         Bootstrap.Log("NMapDrawings._Ready postfix fired");
         try { HotkeyHandler.AttachOnce(__instance); }
         catch (Exception e) { Bootstrap.Log("ready attach err: " + e); }
+    }
+}
+
+[HarmonyPatch(typeof(NMapDrawings), "SetDrawingModeLocal")]
+public static class NMapDrawings_SetDrawingModeLocal_Patch
+{
+    static void Postfix(DrawingMode drawingMode)
+    {
+        Config.SelectedTool = drawingMode == DrawingMode.Erasing ? PaintTool.Eraser : PaintTool.Pencil;
+        Config.Save();
+        Toolbar.Refresh();
     }
 }

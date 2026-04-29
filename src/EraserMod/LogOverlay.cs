@@ -9,7 +9,7 @@ public static class LogOverlay
     private static CanvasLayer _layer;
     private static readonly List<string> _lines = new();
     private const int MaxLines = 25;
-    private static bool _visible = true;
+    private static bool _visible;
 
     public static void EnsureCreated(Node anyHost)
     {

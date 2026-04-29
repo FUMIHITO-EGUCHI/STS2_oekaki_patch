@@ -6,7 +6,7 @@ namespace EraserMod;
 
 public static class HotkeyHandler
 {
-    private static bool _prevDecrease, _prevIncrease, _prevReset;
+    private static bool _prevDecrease, _prevIncrease, _prevReset, _prevUndo;
 
     private static NMapDrawings _host;
     private static NMapDrawings _attachedTo;
@@ -17,6 +17,7 @@ public static class HotkeyHandler
         if (_attachedTo == host && GodotObject.IsInstanceValid(_attachedTo)) return;
         Bootstrap.MarkGodotReady();
         LogOverlay.EnsureCreated(host);
+        Toolbar.AttachOnce(host);
         Attach(host);
         _attachedTo = host;
     }
@@ -35,37 +36,65 @@ public static class HotkeyHandler
             if (_host == host) _host = null;
         };
 
-        // Show current setting briefly when the map opens.
-        Toast.Show(host, $"消しゴム: {Config.WidthMultiplier:F2}x", 1.2f);
+        Toast.Show(host, $"消しゴム: {Config.EraserMultiplier:F2}x", 1.2f);
     }
 
     private static bool _prevToggle;
+    private static bool _prevToolbarToggle;
 
     private static void Tick()
     {
+        Toolbar.TickFrame();
+        if (!Toolbar.IsMapActive())
+        {
+            _prevDecrease = false;
+            _prevIncrease = false;
+            _prevReset = false;
+            _prevUndo = false;
+            _prevToggle = false;
+            _prevToolbarToggle = false;
+            return;
+        }
+
         bool dec = Input.IsKeyPressed(Key.Bracketleft);
         bool inc = Input.IsKeyPressed(Key.Bracketright);
         bool rst = Input.IsKeyPressed(Key.Backslash);
-        bool tog = Input.IsKeyPressed(Key.F8);
+        bool shift = Input.IsKeyPressed(Key.Shift);
+        bool ctrl = Input.IsKeyPressed(Key.Ctrl);
+        bool tog = ctrl && shift && Input.IsKeyPressed(Key.L);
+        bool toolbarTog = ctrl && shift && Input.IsKeyPressed(Key.E);
+        bool undo = ctrl && Input.IsKeyPressed(Key.Z);
 
         if (tog && !_prevToggle) LogOverlay.Toggle();
         _prevToggle = tog;
 
+        if (toolbarTog && !_prevToolbarToggle) Toolbar.Toggle();
+        _prevToolbarToggle = toolbarTog;
+
+        if (undo && !_prevUndo)
+        {
+            if (UndoStack.UndoLocal(_host)) Toast.Show(_host, "Undo");
+        }
+        _prevUndo = undo;
+
         if (dec && !_prevDecrease)
         {
-            Config.Adjust(-Config.Step);
-            Announce();
+            if (shift) Config.AdjustPencil(-Config.Step);
+            else Config.AdjustEraser(-Config.Step);
+            Announce(shift);
         }
         if (inc && !_prevIncrease)
         {
-            Config.Adjust(+Config.Step);
-            Announce();
+            if (shift) Config.AdjustPencil(+Config.Step);
+            else Config.AdjustEraser(+Config.Step);
+            Announce(shift);
         }
         if (rst && !_prevReset)
         {
-            Config.WidthMultiplier = 1.0f;
+            if (shift) Config.PencilMultiplier = 1.0f;
+            else Config.EraserMultiplier = 1.0f;
             Config.Save();
-            Announce();
+            Announce(shift);
         }
 
         _prevDecrease = dec;
@@ -73,9 +102,10 @@ public static class HotkeyHandler
         _prevReset = rst;
     }
 
-    private static void Announce()
+    private static void Announce(bool pencil)
     {
-        var msg = $"消しゴム: {Config.WidthMultiplier:F2}x";
+        Toolbar.Refresh();
+        var msg = pencil ? $"鉛筆: {Config.PencilMultiplier:F2}x" : $"消しゴム: {Config.EraserMultiplier:F2}x";
         Bootstrap.Log(msg);
         if (_host != null && GodotObject.IsInstanceValid(_host))
             Toast.Show(_host, msg);

@@ -28,7 +28,7 @@ public static class Bootstrap
                 Log($"  patched: {m.DeclaringType?.FullName}.{m.Name}");
                 ours++;
             }
-            Log($"EraserMod ready. multiplier={Config.WidthMultiplier:F2}, our patches={ours}");
+            Log($"EraserMod ready. eraser={Config.EraserMultiplier:F2}, pencil={Config.PencilMultiplier:F2}, our patches={ours}");
         }
         catch (Exception e)
         {
