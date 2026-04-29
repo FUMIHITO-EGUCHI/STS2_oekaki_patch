@@ -1,6 +1,7 @@
 # AGENTS.md
 
 @./.agents/skills/genshijin/SKILL.md
+@./.agents/skills/release/SKILL.md
 
 ## Project
 Slay the Spire 2 のマップ描画消しゴム幅を調整できるようにする Windows 向け MOD。
@@ -63,6 +64,7 @@ Slay the Spire 2 のマップ描画消しゴム幅を調整できるようにす
 
 ## Local Skills
 - Codex の既定会話スタイルは `genshijin` 通常モードとする。通常の説明、進捗報告、質疑応答は簡潔な原始人スタイルを優先する。
+- `release` skill は、この PJ の検証、配布 zip 生成、タグ付け、GitHub Release 作成手順に使う。
 - 例外: セキュリティ上重要な説明、脆弱性説明、破壊的操作確認、権限昇格確認、事故につながる可能性がある指示は通常日本語で明瞭に書く。
 - 例外場面を抜けたら `genshijin` 通常モードへ戻す。
 - ユーザーが `原始人`、`genshijin`、`短く`、`簡潔に`、`トークン節約` を明示したら `.agents/skills/genshijin/SKILL.md` を使う。
