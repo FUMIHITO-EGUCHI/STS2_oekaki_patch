@@ -1,6 +1,6 @@
 # STS2_oekaki_patch
 
-マップに描いた線を消す消しゴムの太さを調整できるようにする MOD。
+マップに描いた線を消す消しゴムの太さ、鉛筆の太さ・色、Undo を調整できるようにする MOD。
 
 ゲームバージョン v0.104.0 (commit dc286199, 2026-04-23) で動作確認。
 
@@ -8,7 +8,8 @@
 
 - ゲーム本体は Godot 4 + .NET (C#)。`0Harmony.dll` と `MonoMod` が同梱されているので、Harmony で実行時パッチを当てる方式。
 - `EraserMod.dll`(Harmony パッチ) を `data_sts2_windows_x86_64/` に配置し、`sts2.dll` の `<Module>.cctor` に `Assembly.LoadFrom("EraserMod.dll").EraserMod.Bootstrap.Init()` を呼ぶ IL を 1 行差し込む。
-- パッチ対象は `NMapDrawings.CreateLineForPlayer(Player, bool isErasing)` で、`isErasing == true` のときに `Line2D.Width *= 倍率` を掛ける。
+- パッチ対象は主に `NMapDrawings.BeginLineLocal` / `CreateLineForPlayer(Player, bool isErasing)` で、ローカル描画だけを拡張する。
+- マルチプレイ同期は未実装。色・太さ・Undo は現時点ではローカル表示のみ。
 
 ## ホットキー（マップ画面で有効）
 
@@ -17,11 +18,19 @@
 | `[` | 消しゴム幅を縮小 |
 | `]` | 消しゴム幅を拡大 |
 | `\` | 倍率を 1.0x にリセット |
+| `Shift + [` | 鉛筆幅を縮小 |
+| `Shift + ]` | 鉛筆幅を拡大 |
+| `Shift + \` | 鉛筆幅を 1.0x にリセット |
+| `Ctrl + Z` | ローカル描画を 1 つ Undo |
+| `Ctrl + Shift + E` | ツールバー表示切替 |
+| `Ctrl + Shift + L` | MOD ログ表示切替 |
 
-倍率は `0.5x` ステップで `0.5 ~ 12.0x` の範囲。デフォルトは **3.0x**。
+倍率は `0.5x` ステップで `0.5 ~ 12.0x` の範囲。消しゴムのデフォルトは **3.0x**、鉛筆のデフォルトは **1.0x**。
 
-設定ファイル: `%LOCALAPPDATA%\MegaCrit\SlayTheSpire2\EraserMod\config.txt`
+設定ファイル: `%LOCALAPPDATA%\MegaCrit\SlayTheSpire2\EraserMod\config.json`
 ログ: 同フォルダの `log.txt`
+
+`config.txt` が残っている場合は初回起動時に `config.json` へ移行する。
 
 ## ビルド
 
@@ -65,8 +74,11 @@ STS2_oekaki_patch/
 ├── src/
 │   ├── EraserMod/         Harmony パッチ DLL
 │   │   ├── Bootstrap.cs       Init/ログ
-│   │   ├── Config.cs          倍率の永続化
-│   │   ├── HotkeyHandler.cs   [/]/\ ホットキー
+│   │   ├── Config.cs          JSON 設定の永続化
+│   │   ├── HotkeyHandler.cs   hotkey 処理
+│   │   ├── Toolbar.cs         ツールバー UI
+│   │   ├── CursorPreview.cs   消しゴムプレビュー
+│   │   ├── UndoStack.cs       ローカル Undo
 │   │   └── Patches.cs         Harmony パッチ定義
 │   └── Injector/          sts2.dll への IL 注入
 ├── refs/                  ビルド時参照する DLL コピー
