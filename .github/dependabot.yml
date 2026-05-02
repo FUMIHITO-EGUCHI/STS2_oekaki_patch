@@ -1,0 +1,17 @@
+version: 2
+updates:
+  # NuGet: Injector の dnlib 等の依存更新
+  - package-ecosystem: nuget
+    directory: /src/Injector
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  # GitHub Actions: ワークフロー内 action のバージョン更新
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
