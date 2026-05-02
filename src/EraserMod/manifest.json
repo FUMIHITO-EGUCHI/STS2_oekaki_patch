@@ -1,0 +1,10 @@
+{
+  "id": "EraserMod",
+  "name": "Eraser Mod",
+  "author": "kurah",
+  "description": "Map drawing eraser/pencil customization for Slay the Spire 2.",
+  "version": "0.0.1",
+  "has_dll": true,
+  "has_pck": false,
+  "affects_gameplay": false
+}
