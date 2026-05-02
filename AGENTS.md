@@ -31,11 +31,13 @@ Slay the Spire 2 のマップ描画消しゴム幅を調整できるようにす
 
 ## Architecture Notes
 - ゲーム本体は Godot 4 + .NET / C#。
-- Runtime patch は Harmony を使い、`EraserMod.Bootstrap.Init()` から `Harmony.PatchAll()` する。
-- Injector は dnlib で `sts2.dll` を書き換える。`sts2.dll.orig` が復元元になる。
-- 設定は `%LOCALAPPDATA%\MegaCrit\SlayTheSpire2\EraserMod\config.txt`。
+- ロード方式はゲーム公式の `MegaCrit.Sts2.Core.Modding.ModManager` 経由。`<game>/mods/EraserMod/` に `EraserMod.dll` と `manifest.json` を配置する。**`sts2.dll` は改変しない**。
+- Runtime patch は Harmony。`Bootstrap` クラスに付けた `[ModInitializer("Init")]` から `Init()` が呼ばれ、その中で `Harmony.PatchAll(Assembly.GetExecutingAssembly())` する。
+- `manifest.json` の `id` と DLL ファイル名が一致する必要がある（`ModManager` が `<id>.dll` を読む仕様）。
+- `src/Injector/` は旧 sts2.dll 改造方式の名残で、現方式では使われない。pre-commit / release skill の整合のため暫定保持。
+- 設定は `%LOCALAPPDATA%\MegaCrit\SlayTheSpire2\EraserMod\config.json`（旧 `config.txt` から自動マイグレ）。
 - ログは同フォルダの `log.txt`。
-- ゲーム更新でメソッド名、シグネチャ、アセンブリ構成が変わる可能性がある。挙動不良時はまず `decompiled/` と `src/EraserMod/Patches.cs` の対象を照合する。
+- ゲーム更新で Harmony 対象メソッド、または `ModManager` / `ModInitializerAttribute` / `ModManifest` の API が変わる可能性がある。挙動不良時はまず `decompiled/` と `src/EraserMod/Patches.cs` / `Bootstrap.cs` の対象を照合する。
 
 ## Working Rules
 - feature branch 前提で作業する。着手時は `sh scripts/start-issue.sh <type> <number> <topic>` で branch を作成する。
