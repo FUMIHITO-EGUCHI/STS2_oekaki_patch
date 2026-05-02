@@ -1,0 +1,30 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+# EraserMod は refs/*.dll（ゲーム DLL、gitignore 済み）に依存するため CI ビルド不可。
+# EraserMod のビルド検証はローカルの pre-commit フック（scripts/pre-commit）が担う。
+# Injector は NuGet（dnlib）のみに依存するため CI でビルド可能。
+
+jobs:
+  injector:
+    name: Injector (dotnet build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore src/Injector
+
+      - name: Build
+        run: dotnet build src/Injector -c Release --no-restore

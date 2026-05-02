@@ -62,6 +62,41 @@ Slay the Spire 2 のマップ描画消しゴム幅を調整できるようにす
 - 作業完了時は Issue コメントに `Result`、`Verification`、`Changed files` を簡潔に残す。
 - close は原則人間が行う。AI は完了条件を満たした根拠を提示する。
 
+## CI / Framework
+
+このリポジトリは [claude-project-template](https://github.com/FUMIHITO-EGUCHI/claude-project-template) ベースのガバナンスフレームワークを使用する。
+
+### GitHub Actions ワークフロー
+
+| ワークフロー | トリガー | 役割 |
+|---|---|---|
+| `claude-issue-triage.yml` | Issue opened | model / type / area ラベル自動付与 |
+| `claude-pr-review.yml` | PR opened / sync | 5 軸 AI レビュー + verdict marker |
+| `rework-tracker.yml` | PR comment | major 指摘時に rework ラベル increment |
+| `claude-mention.yml` | @claude / assign | Claude を Issue/PR で呼び出し |
+| `sync-labels.yml` | labels.yml push | GitHub ラベルを同期 |
+| `security.yml` | push/PR/dispatch | gitleaks / trivy / shellcheck / semgrep |
+| `build.yml` | push/PR | Injector ビルド（EraserMod は refs/ 不在で CI 不可） |
+
+### AI ロール分担
+
+- **Claude**: Issue トリアージ、PR レビュー、設計調査、デバッグ支援
+- **Codex**: 実装、テスト、git ワークフロー実行
+- **共通制約**: commit に `#<issue>` 必須（`[skip-issue]` 例外あり）、`--no-verify` 禁止
+
+### 必要なシークレット設定
+
+GitHub リポジトリ Settings → Secrets に追加が必要:
+- `CLAUDE_CODE_OAUTH_TOKEN` — AI ワークフロー（triage / review / mention）で使用。`/install-github-app` で自動登録
+- `GITHUB_TOKEN` — Actions 既定（追加不要）
+
+### ローカルスキャン
+
+```sh
+bash scripts/security-scan.sh --staged    # staged diff の秘密スキャン
+bash scripts/security-scan.sh --all       # 全スキャナ実行
+```
+
 ## Local Skills
 - Codex の既定会話スタイルは `genshijin` 通常モードとする。通常の説明、進捗報告、質疑応答は簡潔な原始人スタイルを優先する。
 - `release` skill は、この PJ の検証、配布 zip 生成、タグ付け、GitHub Release 作成手順に使う。

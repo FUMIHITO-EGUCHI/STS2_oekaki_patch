@@ -40,3 +40,16 @@ if [ $? -ne 0 ]; then
   echo "Pre-commit check failed: Injector build failed."
   exit 1
 fi
+
+# gitleaks: staged diff の秘密スキャン（未インストール時は警告のみ）
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks protect --staged --no-banner --redact
+  if [ $? -ne 0 ]; then
+    echo ""
+    echo "Pre-commit check failed: gitleaks detected potential secrets in staged files."
+    exit 1
+  fi
+else
+  echo "[pre-commit] gitleaks not installed — skipping secret scan."
+  echo "[pre-commit]   Install: https://github.com/gitleaks/gitleaks#installing"
+fi
