@@ -45,6 +45,11 @@ The mod patches a shipped Godot 4 + .NET game (Slay the Spire 2) at runtime. Thr
 
 Symptom is usually a missing method / changed signature in the Harmony target. Workflow: regenerate `decompiled/` from the new `sts2.dll`, diff against the previous decompile to find the renamed/moved member, update `Patches.cs`, then bump the supported version line in `README.md`.
 
+Multiplayer-specific check (only relevant after a game update touched `MegaCrit.Sts2.Core.Multiplayer.Serialization/`):
+
+- `src/EraserMod/Net/z*Message.cs` types are deliberately prefixed with `z` so they sort *after* every vanilla `INetMessage` in `NetTypeCache` ordinal sort, which keeps vanilla packet IDs stable across MOD presence. If `MessageTypes.cs` switches sorting (e.g. `string.CompareOrdinal` → hash-based), the prefix trick stops working and protocol compatibility breaks. Re-verify `NetTypeCache.cs` sort logic when `decompiled/` is regenerated.
+- Confirm no new vanilla `INetMessage` whose name starts with a character `> 'z'` (0x7A) was introduced — that would push our types into the middle of the vanilla list and shift IDs.
+
 ## Git workflow specifics
 
 - Branches: `feature|fix|refactor|docs|chore/<issue#>-<topic>`; chores without an issue use `chore/skip-<topic>`.

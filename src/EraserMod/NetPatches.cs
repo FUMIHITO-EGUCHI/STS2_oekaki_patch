@@ -16,6 +16,7 @@ public static class NMapDrawings_Initialize_Patch
             netService.RegisterMessageHandler(NetSync.OnStyle);
             netService.RegisterMessageHandler(NetSync.OnUndo);
             NetSync.Attach(__instance, netService);
+            NetSync.SendHello();
             Bootstrap.Log("[MP] EraserMod multiplayer handlers registered");
         }
         catch (Exception e)
