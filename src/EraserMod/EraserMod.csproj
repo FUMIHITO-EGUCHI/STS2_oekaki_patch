@@ -24,4 +24,10 @@
       <Private>false</Private>
     </Reference>
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="manifest.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>
