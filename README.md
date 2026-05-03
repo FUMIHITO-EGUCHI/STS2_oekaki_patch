@@ -73,6 +73,12 @@ Issue 起点の feature branch 運用を前提にしています。
 
 旧 Injector 方式 (v0.0.1) で導入していた場合は、`install.ps1` 実行時に自動で `sts2.dll` を `sts2.dll.orig` から復元し、旧 `EraserMod.dll` を `data_sts2_windows_x86_64/` から取り除く。
 
+## ライセンス
+
+MIT License — 詳細は [LICENSE](LICENSE) を参照。
+
+> `refs/` および `decompiled/` 配下はゲーム本体由来のファイルであり、本ライセンスの対象外。配布 zip にも含まれない。
+
 ## ファイル構成
 
 ```

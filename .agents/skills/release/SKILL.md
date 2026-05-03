@@ -68,6 +68,7 @@ git diff --stat master...HEAD
 - `install.ps1`
 - `uninstall.ps1`
 - `README.md`
+- `LICENSE`
 
 含めないもの:
 
@@ -88,7 +89,7 @@ New-Item -ItemType Directory -Force "$dist\src\EraserMod\bin\Release" | Out-Null
 New-Item -ItemType Directory -Force "$dist\src\Injector\bin\Release\net8.0" | Out-Null
 Copy-Item src\EraserMod\bin\Release\EraserMod.dll "$dist\src\EraserMod\bin\Release\"
 Copy-Item src\Injector\bin\Release\net8.0\* "$dist\src\Injector\bin\Release\net8.0\" -Recurse
-Copy-Item install.ps1,uninstall.ps1,README.md $dist
+Copy-Item install.ps1,uninstall.ps1,README.md,LICENSE $dist
 Compress-Archive -Path "$dist\*" -DestinationPath "dist\STS2_oekaki_patch-v$version.zip" -Force
 ```
 
