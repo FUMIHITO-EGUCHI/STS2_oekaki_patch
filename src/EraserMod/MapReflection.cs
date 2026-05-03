@@ -34,6 +34,15 @@ internal static class MapReflection
         return id == 0 ? null : GetDrawingStateForPlayerMethod?.Invoke(host, new object[] { id });
     }
 
+    public static object GetStateForNetId(NMapDrawings host, ulong netId)
+        => netId == 0 ? null : GetDrawingStateForPlayerMethod?.Invoke(host, new object[] { netId });
+
+    public static ulong GetStatePlayerId(object state)
+    {
+        var val = state?.GetType().GetField("playerId")?.GetValue(state);
+        return val is ulong id ? id : 0ul;
+    }
+
     public static SubViewport GetDrawViewport(object state)
     {
         return state?.GetType().GetField("drawViewport")?.GetValue(state) as SubViewport;
