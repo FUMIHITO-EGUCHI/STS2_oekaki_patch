@@ -20,6 +20,12 @@ internal static class NetSync
     internal static readonly MessageHandlerDelegate<zEraserModLineStyleMessage> OnStyle =
         (msg, id) =>
         {
+            // Hello must precede style — drop spoofed style from peers we never shook hands with.
+            if (!PeerStyleCache.IsModPeer(id))
+            {
+                Bootstrap.Log($"[MP] Drop style from non-mod peer {id}");
+                return;
+            }
             Bootstrap.Log($"[MP] Style from {id}: pencil={msg.PencilMultiplier:F2} eraser={msg.EraserMultiplier:F2} color={msg.ColorHex}");
             PeerStyleCache.SetStyle(id, msg.PencilMultiplier, msg.EraserMultiplier, msg.ColorHex);
         };
@@ -27,6 +33,13 @@ internal static class NetSync
     internal static readonly MessageHandlerDelegate<zEraserModUndoMessage> OnUndo =
         (msg, id) =>
         {
+            // Undo deletes a Line2D from the peer's viewport — only allow it from peers
+            // that completed the hello handshake, to mitigate spoofed undo storms.
+            if (!PeerStyleCache.IsModPeer(id))
+            {
+                Bootstrap.Log($"[MP] Drop undo from non-mod peer {id}");
+                return;
+            }
             Bootstrap.Log($"[MP] Undo from peer {id}");
             if (_host != null) UndoStack.UndoPeer(_host, id);
         };
@@ -35,21 +48,39 @@ internal static class NetSync
 
     public static void Attach(NMapDrawings host, INetGameService svc)
     {
+        // Defensive: if a previous Initialize was not paired with _ExitTree,
+        // the old service still holds our handlers. Clean it up before swapping.
+        if (_svc != null && !ReferenceEquals(_svc, svc))
+            TryUnregisterAll(_svc);
+
         _host = host;
         _svc = svc;
+        PeerStyleCache.Clear();
+
         try { svc.SendMessage(new zEraserModHelloMessage()); }
         catch (Exception e) { Bootstrap.Log("hello send err: " + e.Message); }
     }
 
-    // Returns the service so the caller can unregister handlers.
+    // Always returns the currently-attached service (if any) so the caller can
+    // unregister handlers, regardless of whether host matches the stored one.
     public static INetGameService Detach(NMapDrawings host)
     {
-        if (_host != host) return null;
         var svc = _svc;
         _svc = null;
         _host = null;
         PeerStyleCache.Clear();
         return svc;
+    }
+
+    private static void TryUnregisterAll(INetGameService svc)
+    {
+        try
+        {
+            svc.UnregisterMessageHandler(OnHello);
+            svc.UnregisterMessageHandler(OnStyle);
+            svc.UnregisterMessageHandler(OnUndo);
+        }
+        catch (Exception e) { Bootstrap.Log("re-attach unregister err: " + e.Message); }
     }
 
     public static void SendStyleAnnounce()
