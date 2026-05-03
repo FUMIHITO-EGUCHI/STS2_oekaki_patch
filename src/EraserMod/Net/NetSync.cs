@@ -56,8 +56,12 @@ internal static class NetSync
         _host = host;
         _svc = svc;
         PeerStyleCache.Clear();
+    }
 
-        try { svc.SendMessage(new zEraserModHelloMessage()); }
+    public static void SendHello()
+    {
+        if (!IsActive) return;
+        try { _svc.SendMessage(new zEraserModHelloMessage()); }
         catch (Exception e) { Bootstrap.Log("hello send err: " + e.Message); }
     }
 

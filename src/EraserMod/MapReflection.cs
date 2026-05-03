@@ -2,6 +2,7 @@ using System;
 using System.Reflection;
 using Godot;
 using MegaCrit.Sts2.Core.Entities.Players;
+using MegaCrit.Sts2.Core.Multiplayer.Game;
 using MegaCrit.Sts2.Core.Nodes.Screens.Map;
 
 namespace EraserMod;
@@ -13,20 +14,7 @@ internal static class MapReflection
     private static readonly MethodInfo GetDrawingStateForPlayerMethod = typeof(NMapDrawings).GetMethod("GetDrawingStateForPlayer", BindingFlags.NonPublic | BindingFlags.Instance);
 
     public static ulong GetLocalNetId(NMapDrawings host)
-    {
-        var netSvc = NetServiceField?.GetValue(host);
-        if (netSvc == null) return 0;
-        var prop = netSvc.GetType().GetProperty("NetId");
-        if (prop == null)
-        {
-            foreach (var iface in netSvc.GetType().GetInterfaces())
-            {
-                prop = iface.GetProperty("NetId");
-                if (prop != null) break;
-            }
-        }
-        return prop == null ? 0 : (ulong)prop.GetValue(netSvc);
-    }
+        => (NetServiceField?.GetValue(host) as INetGameService)?.NetId ?? 0;
 
     public static object GetLocalState(NMapDrawings host)
     {
@@ -62,7 +50,8 @@ internal static class MapReflection
         return modeValue is DrawingMode mode ? mode : DrawingMode.None;
     }
 
-    public static bool IsLocalDrawing(NMapDrawings host)
+    // True while the local player is mid-stroke (currentlyDrawingLine is non-null).
+    public static bool IsCurrentlyDrawing(NMapDrawings host)
     {
         return GetCurrentLine(GetLocalState(host)) != null;
     }

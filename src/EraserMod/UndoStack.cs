@@ -7,7 +7,7 @@ public static class UndoStack
 {
     public static bool UndoLocal(NMapDrawings host)
     {
-        if (host == null || MapReflection.IsLocalDrawing(host)) return false;
+        if (host == null || MapReflection.IsCurrentlyDrawing(host)) return false;
         var viewport = MapReflection.GetDrawViewport(MapReflection.GetLocalState(host));
         if (viewport == null) return false;
 
