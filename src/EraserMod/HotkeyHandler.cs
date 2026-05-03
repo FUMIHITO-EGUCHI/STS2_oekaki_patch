@@ -73,7 +73,11 @@ public static class HotkeyHandler
 
         if (undo && !_prevUndo)
         {
-            if (UndoStack.UndoLocal(_host)) Toast.Show(_host, "Undo");
+            if (UndoStack.UndoLocal(_host))
+            {
+                NetSync.SendUndo();
+                Toast.Show(_host, "Undo");
+            }
         }
         _prevUndo = undo;
 
