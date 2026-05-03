@@ -2,9 +2,11 @@ using System;
 using System.IO;
 using System.Reflection;
 using HarmonyLib;
+using MegaCrit.Sts2.Core.Modding;
 
 namespace EraserMod;
 
+[ModInitializer(nameof(Init))]
 public static class Bootstrap
 {
     private const string HarmonyId = "com.kurah.sts2.erasermod";

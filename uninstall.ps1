@@ -3,17 +3,28 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $dataDir = Join-Path $GameDir 'data_sts2_windows_x86_64'
+
+# 1. remove ModManager-based install: <game>/mods/EraserMod/
+$modDir = Join-Path $GameDir 'mods\EraserMod'
+if (Test-Path $modDir) {
+  Remove-Item -Recurse -Force $modDir
+  Write-Host "Removed $modDir."
+} else {
+  Write-Host "No ModManager install found at $modDir."
+}
+
+# 2. legacy cleanup: restore sts2.dll if a previous Injector-based install left a backup
 $sts2 = Join-Path $dataDir 'sts2.dll'
 $backup = Join-Path $dataDir 'sts2.dll.orig'
-$modDll = Join-Path $dataDir 'EraserMod.dll'
-
 if (Test-Path $backup) {
   Copy-Item $backup $sts2 -Force
   Remove-Item $backup
-  Write-Host "Restored sts2.dll from backup."
-} else {
-  Write-Host "No backup found — sts2.dll left untouched. Verify integrity via Steam if needed."
+  Write-Host "Restored sts2.dll from previous Injector install backup."
+}
+$legacyModDll = Join-Path $dataDir 'EraserMod.dll'
+if (Test-Path $legacyModDll) {
+  Remove-Item $legacyModDll
+  Write-Host "Removed legacy EraserMod.dll from data_sts2_windows_x86_64."
 }
 
-if (Test-Path $modDll) { Remove-Item $modDll; Write-Host "Removed EraserMod.dll." }
 Write-Host "Uninstall complete."
