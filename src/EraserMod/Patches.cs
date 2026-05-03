@@ -11,7 +11,6 @@ public static class NMapDrawings_BeginLineLocal_Patch
 {
     static void Postfix(NMapDrawings __instance)
     {
-        Bootstrap.Log("BeginLineLocal postfix fired");
         try
         {
             HotkeyHandler.AttachOnce(__instance);
@@ -40,17 +39,18 @@ public static class NMapDrawings_BeginLineLocal_Patch
 public static class NMapDrawings_BeginLine_Patch
 {
     // Runs before the line is sent to peers via QueueOrSendEvent — good time to announce style.
-    static void Prefix(NMapDrawings __instance, object __0)
+    // `state` is bound by name to BeginLine's first parameter (the private DrawingState).
+    // Using `object` avoids referencing the private type while staying robust against
+    // game updates that reorder parameters (vs positional `__0` binding).
+    static void Prefix(NMapDrawings __instance, object state)
     {
         try
         {
-            if (MapReflection.GetStatePlayerId(__0) == MapReflection.GetLocalNetId(__instance))
+            if (MapReflection.GetStatePlayerId(state) == MapReflection.GetLocalNetId(__instance))
                 NetSync.SendStyleAnnounce();
         }
         catch (Exception e) { Bootstrap.Log("BeginLine prefix err: " + e.Message); }
     }
-
-    static void Postfix() => Bootstrap.Log("BeginLine postfix fired");
 }
 
 [HarmonyPatch(typeof(NMapDrawings), "CreateLineForPlayer")]
@@ -58,7 +58,6 @@ public static class NMapDrawings_CreateLineForPlayer_Patch
 {
     static void Postfix(NMapDrawings __instance, Line2D __result, Player player, bool isErasing)
     {
-        Bootstrap.Log($"CreateLineForPlayer fired isErasing={isErasing}");
         if (__result == null || player == null) return;
 
         bool isLocal = player.NetId == MapReflection.GetLocalNetId(__instance);
@@ -72,9 +71,7 @@ public static class NMapDrawings_CreateLineForPlayer_Patch
     {
         if (isErasing)
         {
-            var eraseColor = new Color(1f, 1f, 1f, line.DefaultColor.A);
-            line.DefaultColor = eraseColor;
-            Bootstrap.Log($"Eraser color forced to white alpha={eraseColor.A:F2}");
+            line.DefaultColor = new Color(1f, 1f, 1f, line.DefaultColor.A);
             return;
         }
 
