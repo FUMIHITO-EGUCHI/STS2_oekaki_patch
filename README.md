@@ -8,8 +8,8 @@
 
 - ゲーム本体は Godot 4 + .NET (C#)。`0Harmony.dll` と `MonoMod` が同梱されているので、Harmony で実行時パッチを当てる方式。
 - ゲーム公式の MOD ローダー (`MegaCrit.Sts2.Core.Modding.ModManager`) 経由でロードする。`<game>/mods/EraserMod/` に `EraserMod.dll` と `manifest.json` を置き、`Bootstrap` クラスの `[ModInitializer("Init")]` から `Harmony.PatchAll()` を呼ぶ。**`sts2.dll` には触らない**。
-- パッチ対象は主に `NMapDrawings.BeginLineLocal` / `CreateLineForPlayer(Player, bool isErasing)` で、ローカル描画だけを拡張する。
-- マルチプレイ同期は未実装。色・太さ・Undo は現時点ではローカル表示のみ。
+- パッチ対象は `NMapDrawings.BeginLineLocal` / `CreateLineForPlayer(Player, bool isErasing)` / `Initialize` / `_ExitTree`。
+- マルチプレイ対応: 接続時ハンドシェイクで MOD 保持 peer を検出し、描画開始時に色・太さを通知、Ctrl+Z 時は Undo も peer へ送信。vanilla peer との混在も可（下記参照）。
 
 ## ホットキー（マップ画面で有効）
 
@@ -31,6 +31,27 @@
 ログ: 同フォルダの `log.txt`
 
 `config.txt` が残っている場合は初回起動時に `config.json` へ移行する。
+
+`config.json` のデフォルト構造:
+
+```json
+{
+  "Schema": 1,
+  "EraserMultiplier": 3.0,
+  "PencilMultiplier": 1.0,
+  "PencilColorHex": null,
+  "SelectedTool": "Pencil",
+  "ToolbarVisible": true
+}
+```
+
+`PencilColorHex` は `null` でキャラクターのデフォルト色。`#RRGGBB` 形式で指定可能。
+
+## マルチプレイ
+
+- MOD peer 同士: 接続時ハンドシェイク後、描画開始のたびに色・太さを通知。相手の描画に反映。
+- **vanilla peer 混在**: EraserMod 未導入の peer とも接続できる。EraserMod peer の描画は vanilla 側ではデフォルト幅・色で表示される（MOD の通知パケットは vanilla クライアントで無視される）。Ctrl+Z の Undo 通知も vanilla peer には届かない。
+- 全 peer に EraserMod の導入を強制はしない。
 
 ## ビルド
 
@@ -84,18 +105,30 @@ MIT License — 詳細は [LICENSE](LICENSE) を参照。
 ```
 STS2_oekaki_patch/
 ├── src/
-│   ├── EraserMod/         Harmony パッチ DLL
-│   │   ├── Bootstrap.cs       [ModInitializer] エントリポイント / ログ
-│   │   ├── manifest.json      ModManager 用マニフェスト
-│   │   ├── Config.cs          JSON 設定の永続化
-│   │   ├── HotkeyHandler.cs   hotkey 処理
-│   │   ├── Toolbar.cs         ツールバー UI
-│   │   ├── CursorPreview.cs   消しゴムプレビュー
-│   │   ├── UndoStack.cs       ローカル Undo
-│   │   └── Patches.cs         Harmony パッチ定義
-│   └── Injector/          (legacy) sts2.dll への IL 注入。現方式では不要
-├── refs/                  ビルド時参照する DLL コピー
-├── decompiled/            ILSpy で展開した解析用ソース（参考）
+│   ├── EraserMod/             Harmony パッチ DLL
+│   │   ├── Bootstrap.cs           [ModInitializer] エントリポイント / ログ
+│   │   ├── manifest.json          ModManager 用マニフェスト
+│   │   ├── SupportedVersion.cs    対応ゲームバージョン定数（単一ソース）
+│   │   ├── Config.cs              config.json の読み書き・マイグレ
+│   │   ├── HotkeyHandler.cs       hotkey 処理
+│   │   ├── Toolbar.cs             ツールバー UI
+│   │   ├── CursorPreview.cs       鉛筆/消しゴムカーソル円プレビュー
+│   │   ├── UndoStack.cs           ローカル Undo スタック
+│   │   ├── MapReflection.cs       NMapDrawings 内部フィールドへのリフレクション
+│   │   ├── ColorUtil.cs           #RRGGBB 解析ユーティリティ
+│   │   ├── Toast.cs               一時メッセージ表示
+│   │   ├── LogOverlay.cs          MOD ログオーバーレイ表示
+│   │   ├── Patches.cs             Harmony パッチ定義（描画幅・色）
+│   │   ├── NetPatches.cs          Harmony パッチ定義（MP ハンドラ登録・解除）
+│   │   └── Net/
+│   │       ├── NetSync.cs             INetGameService ラッパー・送信ヘルパー
+│   │       ├── PeerStyleCache.cs      peer ごとのスタイルキャッシュ
+│   │       ├── zEraserModHelloMessage.cs    接続時ハンドシェイク
+│   │       ├── zEraserModLineStyleMessage.cs 描画前スタイル通知
+│   │       └── zEraserModUndoMessage.cs     Undo 通知
+│   └── Injector/              (legacy) sts2.dll への IL 注入。現方式では不要
+├── refs/                      ビルド時参照する DLL コピー
+├── decompiled/                ILSpy で展開した解析用ソース（参考）
 ├── install.ps1
 └── uninstall.ps1
 ```
