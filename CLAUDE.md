@@ -9,12 +9,12 @@ The authoritative agent rules live in [AGENTS.md](AGENTS.md) (working rules, sco
 ```powershell
 # Build (pre-commit hook runs both)
 dotnet build src/EraserMod -c Release   # Harmony patch DLL  (.NET 8)
-dotnet build src/Injector  -c Release   # IL injector tool   (.NET 9)
+dotnet build src/Injector  -c Release   # IL injector tool   (.NET 9, legacy — not used in ModManager setup)
 
 # Install / uninstall against a Steam install
 .\install.ps1                 # default Steam path
 .\install.ps1 -GameDir "..."  # custom path
-.\uninstall.ps1               # restores sts2.dll from sts2.dll.orig
+.\uninstall.ps1               # removes mods/EraserMod/ (v0.0.1 legacy: also restores sts2.dll from sts2.dll.orig)
 
 # Branch / hook setup (Git Bash required for .sh scripts on Windows)
 & "C:\Program Files\Git\bin\sh.exe" scripts/setup-hooks.sh
