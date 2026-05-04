@@ -19,7 +19,7 @@ public static class Bootstrap
 
         try
         {
-            Log("EraserMod loading...");
+            Log($"EraserMod loading... (supported STS2: {SupportedVersion.Display})");
             Config.Load();
             Harmony.DEBUG = true;
             var harmony = new Harmony(HarmonyId);

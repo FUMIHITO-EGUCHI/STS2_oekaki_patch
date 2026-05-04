@@ -57,6 +57,7 @@ Slay the Spire 2 のマップ描画消しゴム幅を調整できるようにす
 - `install.ps1` / `uninstall.ps1` に触れた場合は PowerShell 構文とパス処理を確認する
 - ゲーム挙動に触れた場合は、可能なら対象 STS2 バージョンで手動確認する
 - README に記載した対応ゲームバージョンやホットキーが実装と一致していることを確認する
+- ゲーム更新時は `src/EraserMod/SupportedVersion.cs` を単一ソースとして更新し、README の先頭バージョン行も合わせて変更する
 
 ## GitHub Issue Operations
 - タスク管理は GitHub Issues を single source of truth とする。
