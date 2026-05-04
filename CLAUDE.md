@@ -27,15 +27,25 @@ There is no test suite. Verification is build success + manual in-game check on 
 
 The mod patches a shipped Godot 4 + .NET game (Slay the Spire 2) at runtime. Three pieces cooperate:
 
-1. **`src/Injector/`** — one-shot tool that uses **dnlib** to rewrite `sts2.dll`'s `<Module>.cctor`, inserting a single IL call:
-   `Assembly.LoadFrom("EraserMod.dll").GetType("EraserMod.Bootstrap").GetMethod("Init").Invoke(null, null)`.
-   Run by `install.ps1` after backing up the original to `sts2.dll.orig`. `uninstall.ps1` restores from that backup — never overwrite without a backup.
+1. **`src/Injector/`** — *(legacy, not used in current ModManager-based setup)* one-shot tool that used **dnlib** to rewrite `sts2.dll`'s `<Module>.cctor`. Retained for pre-commit hook parity; `uninstall.ps1` still restores `sts2.dll` from `sts2.dll.orig` for users who installed v0.0.1 via the old injector.
 
-2. **`src/EraserMod/`** — the Harmony patch DLL loaded by the injected call.
-   - `Bootstrap.cs` — entry point, sets up logging and calls `Harmony.PatchAll()`.
-   - `Patches.cs` — Harmony patches. Current target: `NMapDrawings.CreateLineForPlayer(Player, bool isErasing)`; when `isErasing` is true, multiplies `Line2D.Width` by the configured factor.
-   - `Config.cs` — persists the multiplier to `%LOCALAPPDATA%\MegaCrit\SlayTheSpire2\EraserMod\config.txt`.
-   - `HotkeyHandler.cs` — `[` / `]` adjust width in 0.5x steps (range 0.5–12.0, default 3.0); `\` resets to 1.0.
+2. **`src/EraserMod/`** — the Harmony patch DLL, loaded by `ModManager` via `[ModInitializer("Init")]` on `Bootstrap`.
+   - `Bootstrap.cs` — entry point; sets up logging, calls `Harmony.PatchAll()`.
+   - `SupportedVersion.cs` — single source for `GameVersion` / `GameCommit` / `GameDate` constants.
+   - `Patches.cs` — drawing patches: `NMapDrawings.CreateLineForPlayer` (eraser/pencil width + peer color), `BeginLineLocal` (style announce).
+   - `NetPatches.cs` — MP patches: `NMapDrawings.Initialize` (register handlers + send hello), `_ExitTree` (unregister handlers).
+   - `Config.cs` — reads/writes `%LOCALAPPDATA%\MegaCrit\SlayTheSpire2\EraserMod\config.json`; auto-migrates from legacy `config.txt`.
+   - `HotkeyHandler.cs` — `[`/`]` eraser width, `Shift+[`/`]` pencil width, `\`/`Shift+\` reset, `Ctrl+Z` undo (+ MP notify), `Ctrl+Shift+E` toolbar, `Ctrl+Shift+L` log overlay.
+   - `Toolbar.cs` — in-game toolbar UI (tool select, width display, color picker).
+   - `CursorPreview.cs` — circle cursor scaled to current eraser/pencil width.
+   - `UndoStack.cs` — local undo stack; `UndoPeer` removes the last line drawn by a given peer net-id.
+   - `MapReflection.cs` — reflection helpers for `NMapDrawings` private fields (`_netService`, `_playerCollection`, drawing state).
+   - `ColorUtil.cs` — `#RRGGBB` hex → `Godot.Color` parse utility.
+   - `Toast.cs` — transient in-game toast messages.
+   - `LogOverlay.cs` — toggleable MOD log overlay node.
+   - `Net/NetSync.cs` — holds `INetGameService` reference; send helpers for hello / style / undo messages.
+   - `Net/PeerStyleCache.cs` — per-peer style cache and MOD-peer registry (hello handshake guard).
+   - `Net/zEraserModHelloMessage.cs` / `zEraserModLineStyleMessage.cs` / `zEraserModUndoMessage.cs` — `INetMessage` types prefixed with `z` so their ordinal sorts after all vanilla types, keeping vanilla packet IDs stable.
 
 3. **`refs/`** — local copies of the game's DLLs used only as build references. Never commit (`.gitignore`'d) and never redistribute.
 
