@@ -43,7 +43,7 @@ The mod patches a shipped Godot 4 + .NET game (Slay the Spire 2) at runtime. Thr
 
 ### When the game updates
 
-Symptom is usually a missing method / changed signature in the Harmony target. Workflow: regenerate `decompiled/` from the new `sts2.dll`, diff against the previous decompile to find the renamed/moved member, update `Patches.cs`, then bump the supported version line in `README.md`.
+Symptom is usually a missing method / changed signature in the Harmony target. Workflow: regenerate `decompiled/` from the new `sts2.dll`, diff against the previous decompile to find the renamed/moved member, update `Patches.cs`, then update **`src/EraserMod/SupportedVersion.cs`** (the single source for the supported game version — `GameVersion`, `GameCommit`, `GameDate`). Also update the version line at the top of `README.md` to match.
 
 Multiplayer-specific check (only relevant after a game update touched `MegaCrit.Sts2.Core.Multiplayer.Serialization/`):
 
