@@ -59,14 +59,15 @@ git diff --stat master...HEAD
 ### 5. 配布物の生成
 
 `dist/` を作り直し、配布に必要なファイルだけを zip に含める。
-`install.ps1` はリポジトリ相対の `src/.../bin/Release/...` を参照するため、zip 内も同じ相対配置を維持する。
+エンドユーザーは `install.bat` を使用するため、DLL と manifest は zip ルートに配置する。
+`install.ps1` / `uninstall.ps1` は開発者用（ソースからビルド）のため配布 zip には含めない。
 
 含めるもの:
 
-- `src/EraserMod/bin/Release/EraserMod.dll`
-- `src/Injector/bin/Release/net8.0/` の実行に必要な出力一式
-- `install.ps1`
-- `uninstall.ps1`
+- `src/EraserMod/bin/Release/EraserMod.dll` → zip ルートに配置
+- `src/EraserMod/manifest.json` → zip ルートに配置
+- `install.bat`
+- `uninstall.bat`
 - `README.md`
 - `LICENSE`
 
@@ -78,6 +79,8 @@ git diff --stat master...HEAD
 - `bin/`
 - `obj/`
 - `*.orig`
+- `install.ps1` / `uninstall.ps1`（開発者用、配布対象外）
+- `src/Injector/`（legacy、配布対象外）
 
 例:
 
@@ -85,11 +88,10 @@ git diff --stat master...HEAD
 $version = "X.Y.Z"
 $dist = "dist\STS2_oekaki_patch-v$version"
 Remove-Item -Recurse -Force dist -ErrorAction SilentlyContinue
-New-Item -ItemType Directory -Force "$dist\src\EraserMod\bin\Release" | Out-Null
-New-Item -ItemType Directory -Force "$dist\src\Injector\bin\Release\net8.0" | Out-Null
-Copy-Item src\EraserMod\bin\Release\EraserMod.dll "$dist\src\EraserMod\bin\Release\"
-Copy-Item src\Injector\bin\Release\net8.0\* "$dist\src\Injector\bin\Release\net8.0\" -Recurse
-Copy-Item install.ps1,uninstall.ps1,README.md,LICENSE $dist
+New-Item -ItemType Directory -Force $dist | Out-Null
+Copy-Item src\EraserMod\bin\Release\EraserMod.dll $dist
+Copy-Item src\EraserMod\manifest.json             $dist
+Copy-Item install.bat,uninstall.bat,README.md,LICENSE $dist
 Compress-Archive -Path "$dist\*" -DestinationPath "dist\STS2_oekaki_patch-v$version.zip" -Force
 ```
 

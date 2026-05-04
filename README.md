@@ -81,18 +81,26 @@ Issue 起点の feature branch 運用を前提にしています。
 
 ## インストール / アンインストール
 
-```powershell
-.\install.ps1                # 既定の Steam パスを想定
-.\install.ps1 -GameDir "..."
+### 通常手順（エンドユーザー向け）
 
+1. [GitHub Releases](https://github.com/FUMIHITO-EGUCHI/STS2_oekaki_patch/releases) から最新の zip をダウンロードして展開する
+2. `install.bat` をダブルクリック（デフォルト Steam パスへ自動インストール）  
+   または **ゲームフォルダを `install.bat` にドラッグ＆ドロップ**（非標準パスの場合）
+3. ゲームの設定で **Mods: ON** にする（初回のみ確認ダイアログあり）
+
+アンインストール: `uninstall.bat` を同様に実行（または ドラッグ＆ドロップ）
+
+EraserMod は `<game>/mods/EraserMod/` に配置するだけで `sts2.dll` を改変しない。ゲームをアップデートしても Steam 整合性チェックの影響を受けない。
+
+旧 Injector 方式 (v0.0.1) で導入していた場合は、`install.bat` 実行時に自動で `sts2.dll` を `sts2.dll.orig` から復元し、旧 `EraserMod.dll` を `data_sts2_windows_x86_64/` から取り除く。
+
+### 開発者向け（ソースからビルドして導入）
+
+```powershell
+.\install.ps1                # dotnet build + コピー（デフォルト Steam パス）
+.\install.ps1 -GameDir "..." # カスタムパス
 .\uninstall.ps1              # mods/EraserMod/ を削除
 ```
-
-導入後、ゲームの設定で **MOD 機能を ON** にする必要がある (初回のみ警告ダイアログで同意)。
-
-`install.ps1` は EraserMod を `<game>/mods/EraserMod/` にコピーするだけで `sts2.dll` を改変しない。ゲームをアップデートしても基本壊れず、Steam の整合性チェックの影響も受けない。`NMapDrawings` のメソッド名・シグネチャがゲーム更新で変わった場合のみ `decompiled/` を再生成して再ビルドが必要。
-
-旧 Injector 方式 (v0.0.1) で導入していた場合は、`install.ps1` 実行時に自動で `sts2.dll` を `sts2.dll.orig` から復元し、旧 `EraserMod.dll` を `data_sts2_windows_x86_64/` から取り除く。
 
 ## ライセンス
 
