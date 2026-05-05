@@ -1,5 +1,5 @@
 @echo off
-setlocal EnableDelayedExpansion
+setlocal
 chcp 65001 > nul
 
 :: If a folder was dragged onto this .bat, use it; otherwise fall back to the default Steam path.

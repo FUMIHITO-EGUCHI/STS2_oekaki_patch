@@ -1,5 +1,5 @@
 @echo off
-setlocal EnableDelayedExpansion
+setlocal
 chcp 65001 > nul
 
 :: If a folder was dragged onto this .bat, use it; otherwise fall back to the default Steam path.
@@ -12,6 +12,18 @@ if not "%~1"=="" (
 echo === EraserMod Uninstaller ===
 echo Game dir: %GAME%
 echo.
+
+if not exist "%GAME%\" (
+    echo ERROR: Game directory not found.
+    echo   %GAME%
+    echo.
+    echo Usage:
+    echo   - Drag the game folder onto uninstall.bat, OR
+    echo   - Double-click ^(uses the default Steam path above^)
+    echo.
+    pause
+    exit /b 1
+)
 
 set "DATADIR=%GAME%\data_sts2_windows_x86_64"
 set "MODDIR=%GAME%\mods\EraserMod"
