@@ -40,11 +40,19 @@ if exist "%MODDIR%\" (
 if exist "%DATADIR%\sts2.dll.orig" (
     copy /y "%DATADIR%\sts2.dll.orig" "%DATADIR%\sts2.dll" > nul
     del "%DATADIR%\sts2.dll.orig"
-    echo [legacy] Restored sts2.dll from sts2.dll.orig.
+    if errorlevel 1 (
+        echo [legacy] WARNING: Could not delete sts2.dll.orig — delete it manually.
+    ) else (
+        echo [legacy] Restored sts2.dll from sts2.dll.orig.
+    )
 )
 if exist "%DATADIR%\EraserMod.dll" (
     del "%DATADIR%\EraserMod.dll"
-    echo [legacy] Removed EraserMod.dll from data dir.
+    if errorlevel 1 (
+        echo [legacy] WARNING: Could not delete EraserMod.dll — delete it manually.
+    ) else (
+        echo [legacy] Removed EraserMod.dll from data dir.
+    )
 )
 
 echo.
