@@ -10,14 +10,71 @@ on:
   pull_request_review:
     types: [submitted]
 
+permissions: {}
+
 jobs:
-  claude:
-    if: |
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
-      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+  preflight:
     runs-on: ubuntu-latest
+    environment: claude  # CLAUDE_CODE_OAUTH_TOKEN は env: claude に格納
+    permissions:
+      pull-requests: read
+    outputs:
+      has_token: ${{ steps.check.outputs.has_token }}
+      trusted_context: ${{ steps.trust.outputs.trusted_context }}
+    steps:
+      - id: check
+        env:
+          T: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          if [ -n "$T" ]; then
+            echo "has_token=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_token=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::CLAUDE_CODE_OAUTH_TOKEN is not configured for this repository - skipping Claude workflow. Set the secret to enable."
+          fi
+
+      - id: trust
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_IS_PR: ${{ github.event.issue.pull_request != null }}
+          REVIEW_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+        run: |
+          set -euo pipefail
+
+          trusted=true
+
+          if [ "$EVENT_NAME" = "pull_request_review_comment" ] || [ "$EVENT_NAME" = "pull_request_review" ]; then
+            if [ "$REVIEW_HEAD_REPO" != "$REPO" ]; then
+              trusted=false
+            fi
+          elif [ "$EVENT_NAME" = "issue_comment" ] && [ "$ISSUE_IS_PR" = "true" ]; then
+            head_repo="$(gh api "repos/$REPO/pulls/$ISSUE_NUMBER" --jq '.head.repo.full_name')"
+            if [ "$head_repo" != "$REPO" ]; then
+              trusted=false
+            fi
+          fi
+
+          echo "trusted_context=$trusted" >> "$GITHUB_OUTPUT"
+          if [ "$trusted" != "true" ]; then
+            echo "::warning::Skipping @claude responder for external fork PR context."
+          fi
+
+  claude:
+    needs: preflight
+    if: |
+      needs.preflight.outputs.has_token == 'true' &&
+      needs.preflight.outputs.trusted_context == 'true' &&
+      (
+        (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+        (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+        (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
+        (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+      )
+    runs-on: ubuntu-latest
+    environment: claude  # CLAUDE_CODE_OAUTH_TOKEN は env: claude に格納
     permissions:
       contents: read
       pull-requests: read
