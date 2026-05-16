@@ -1,0 +1,7 @@
+# Force Windows-native line endings for Windows-only scripts.
+# Without this, Edit/Write tools and cross-platform editors can leave bat files
+# with LF terminators, which Windows cmd technically tolerates but can mis-parse
+# in some edge cases, and which break the conventional Windows-script contract.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
