@@ -6,7 +6,7 @@
 :: (pause inside the script cannot catch parse errors). KEEPOPEN guards
 :: against infinite recursion.
 if "%KEEPOPEN%"=="1" goto :body
-echo %CMDCMDLINE% | find /i "/c " > nul
+echo %CMDCMDLINE% | findstr /i /c:"/c " > nul
 if errorlevel 1 goto :body
 set "KEEPOPEN=1"
 cmd /k "%~f0" %*
