@@ -1,4 +1,18 @@
 @echo off
+
+:: --- keep-open trick ---
+:: If double-clicked, %CMDCMDLINE% contains "cmd /c ...". Re-launch under
+:: `cmd /k` once so the console stays open even on parse / runtime errors
+:: (pause inside the script cannot catch parse errors). KEEPOPEN guards
+:: against infinite recursion.
+if "%KEEPOPEN%"=="1" goto :body
+echo %CMDCMDLINE% | find /i "/c " > nul
+if errorlevel 1 goto :body
+set "KEEPOPEN=1"
+cmd /k "%~f0" %*
+exit /b
+
+:body
 setlocal
 chcp 65001 > nul
 
