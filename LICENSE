@@ -19,14 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-Note: The following directories contain files derived from Slay the Spire 2
-and are NOT covered by this license:
-
-- refs/     (game DLL copies used only as build references)
-- decompiled/ (ILSpy output of game assemblies, for reference only)
-
-These files remain the property of MegaCrit and are subject to their
-respective terms of service. They are excluded from all distributed packages.
