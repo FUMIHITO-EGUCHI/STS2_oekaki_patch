@@ -115,6 +115,7 @@ public static class NMapDrawings_Ready_Patch
 {
     static void Postfix(NMapDrawings __instance)
     {
+        Config.LocalDrawingMode = DrawingMode.None;
         Bootstrap.Log("NMapDrawings._Ready postfix fired");
         try { HotkeyHandler.AttachOnce(__instance); }
         catch (Exception e) { Bootstrap.Log("ready attach err: " + e); }
@@ -126,6 +127,7 @@ public static class NMapDrawings_SetDrawingModeLocal_Patch
 {
     static void Postfix(DrawingMode drawingMode)
     {
+        Config.LocalDrawingMode = drawingMode;
         Config.SelectedTool = drawingMode == DrawingMode.Erasing ? PaintTool.Eraser : PaintTool.Pencil;
         Config.Save();
         Toolbar.Refresh();

@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Text.Json;
+using MegaCrit.Sts2.Core.Nodes.Screens.Map;
 
 namespace EraserMod;
 
@@ -24,6 +25,10 @@ public static class Config
     public static string PencilColorHex;
     public static PaintTool SelectedTool = PaintTool.Pencil;
     public static bool ToolbarVisible = true;
+
+    // Runtime-only: tracks local player's current drawing mode to avoid premature
+    // DrawingState creation (which causes a black SubViewport to appear on the map).
+    internal static DrawingMode LocalDrawingMode = DrawingMode.None;
 
     public static float WidthMultiplier
     {
