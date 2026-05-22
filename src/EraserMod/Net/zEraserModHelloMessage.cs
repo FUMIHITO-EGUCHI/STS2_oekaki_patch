@@ -11,6 +11,7 @@ public class zEraserModHelloMessage : INetMessage
     public bool ShouldBroadcast => true;
     public NetTransferMode Mode => NetTransferMode.Reliable;
     public LogLevel LogLevel => LogLevel.Debug;
+    public bool ShouldBuffer => false;
     public void Serialize(PacketWriter writer) => writer.WriteString(Version);
     public void Deserialize(PacketReader reader) => Version = reader.ReadString();
 }
