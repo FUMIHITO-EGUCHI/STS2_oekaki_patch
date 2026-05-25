@@ -44,12 +44,22 @@ public partial class CursorPreview : Node2D
             return;
         }
 
+        // Use cached mode from SetDrawingModeLocal_Patch — avoids calling GetLocalState
+        // (which triggers GetDrawingStateForPlayer) before the player enters drawing mode.
+        // Premature DrawingState creation shows a black SubViewport over the map.
+        var mode = Config.LocalDrawingMode;
+        _tool = mode == DrawingMode.Erasing ? PaintTool.Eraser : PaintTool.Pencil;
+
+        if (!IsDrawingTool(mode))
+        {
+            Visible = false;
+            return;
+        }
+
         _viewportSize = GetViewportRect().Size;
         Position = GetLocalMousePositionSafe();
-        var mode = MapReflection.GetCurrentMode(MapReflection.GetLocalState(_host));
-        _tool = mode == DrawingMode.Erasing ? PaintTool.Eraser : PaintTool.Pencil;
         _drawScale = MapReflection.GetDrawScreenScale(_host);
-        Visible = IsHostActive() && IsDrawingTool(mode) && IsOverDrawArea(Position);
+        Visible = IsHostActive() && IsOverDrawArea(Position);
         if (!Visible)
         {
             if (!_loggedHidden)
